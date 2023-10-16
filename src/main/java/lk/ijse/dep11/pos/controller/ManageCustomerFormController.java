@@ -8,9 +8,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import lk.ijse.dep11.pos.tm.Customer;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,7 +24,14 @@ public class ManageCustomerFormController {
     public JFXTextField txtCustomerAddress;
     public JFXButton btnSave;
     public JFXButton btnDelete;
-    public TableView tblCustomers;
+    public TableView<Customer> tblCustomers;
+
+    public void initialize(){
+        String[] columns = {"id","name","address"};
+        for (int i = 0; i < columns.length; i++) {
+            tblCustomers.getColumns().get(i).setCellValueFactory(new PropertyValueFactory<>());
+        }
+    }
 
     public void navigateToHome(MouseEvent mouseEvent) throws IOException {
         URL resource = this.getClass().getResource("/view/MainForm.fxml");
