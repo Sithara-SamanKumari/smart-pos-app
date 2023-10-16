@@ -7,13 +7,22 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import lk.ijse.dep11.pos.db.SingleDatabaseConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class AppInitializer extends Application {
 
     public static void main(String[] args) {
-        launch(args);
+        try {
+            Connection connection = SingleDatabaseConnection.getInstance().getConnection();
+            launch(args);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     @Override

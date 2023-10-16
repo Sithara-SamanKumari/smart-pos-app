@@ -1,0 +1,33 @@
+CREATE TABLE IF NOT EXISTS customer
+(
+    id      VARCHAR(10) PRIMARY KEY,
+    name    VARCHAR(150) NOT NULL,
+    address VARCHAR(400) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "order"
+(
+    id          VARCHAR(10) PRIMARY KEY,
+    customer_id VARCHAR(10) NOT NULL,
+    date        DATE        NOT NULL,
+    CONSTRAINT fk_order FOREIGN KEY (customer_id) REFERENCES customer (id)
+);
+
+CREATE TABLE IF NOT EXISTS item
+(
+    code        VARCHAR(30) PRIMARY KEY,
+    description VARCHAR(200)  NOT NULL,
+    unit_price  DECIMAL(8, 2) NOT NULL,
+    qty         INT
+);
+
+CREATE TABLE IF NOT EXISTS order_item
+(
+    item_code  VARCHAR(30) PRIMARY KEY,
+    order_id   VARCHAR(10)   NOT NULL,
+    qty        INT           NOT NULL,
+    unit_price DECIMAL(8, 2) NOT NULL,
+    CONSTRAINT fk_order_item_1 FOREIGN KEY (item_code) REFERENCES item (code),
+    CONSTRAINT fk_order_item_2 FOREIGN KEY (order_id) REFERENCES "order" (id)
+);
+
