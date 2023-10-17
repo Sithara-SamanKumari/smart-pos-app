@@ -29,7 +29,7 @@ public class ManageCustomerFormController {
     public void initialize(){
         String[] columns = {"id","name","address"};
         for (int i = 0; i < columns.length; i++) {
-            tblCustomers.getColumns().get(i).setCellValueFactory(new PropertyValueFactory<>());
+            tblCustomers.getColumns().get(i).setCellValueFactory(new PropertyValueFactory<>(columns[i]));
         }
     }
 
