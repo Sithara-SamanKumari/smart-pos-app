@@ -43,7 +43,6 @@ public class SingleDatabaseConnection {
         List<String> readLineList = Files.readAllLines(path);
         String dbScript= readLineList.stream().reduce((previous, current) -> previous.concat(current)).get();
         connection.createStatement().execute(dbScript);
-        System.out.println(dbScript);
     }
 }
 

@@ -6,11 +6,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 class CustomerDataAccessTest {
+
+    @Test
+    void sqlSyntax() {
+        assertDoesNotThrow(()-> Class.forName("lk.ijse.dep11.pos.db.CustomerDataAccess"));
+    }
+
     @BeforeEach
     void setUp() throws SQLException {
         SingleDatabaseConnection.getInstance().getConnection().setAutoCommit(false);
@@ -24,58 +29,50 @@ class CustomerDataAccessTest {
 
     @Test
     void saveCustomer() {
-        Customer customer = new Customer("123","Udara","galle");
-        Customer customer1 = new Customer("123","Udari","galle");
-        Customer customer2 = new Customer("124","Udari","galle");
         assertDoesNotThrow(()->{
-            CustomerDataAccess.saveCustomer(customer);
-            CustomerDataAccess.saveCustomer(customer2);
+            CustomerDataAccess.saveCustomer(new Customer("ABC", "Kasun", "Galle"));
+            CustomerDataAccess.saveCustomer(new Customer("EDF", "Ruwan", "Galle"));
         });
-        assertThrows(Exception.class,()-> {
-            CustomerDataAccess.saveCustomer(customer1);
-        });
-
+        assertThrows(SQLException.class, ()-> CustomerDataAccess
+                .saveCustomer(new Customer("ABC", "Kasun", "Galle")));
     }
 
     @Test
-    void deleteCustomer() {
-        Customer customer = new Customer("123","Udara","galle");
-        Customer customer2 = new Customer("124","Udara","galle");
-        CustomerDataAccess.saveCustomer(customer);
-        CustomerDataAccess.saveCustomer(customer2);
+    void getAllCustomers() throws SQLException {
+        CustomerDataAccess.saveCustomer(new Customer("ABC", "Kasun", "Galle"));
+        CustomerDataAccess.saveCustomer(new Customer("EDF", "Ruwan", "Galle"));
+        assertDoesNotThrow(()->{
+            List<Customer> customerList = CustomerDataAccess.getAllCustomers();
+            assertTrue(customerList.size() >= 2);
+        });
+    }
+
+    @Test
+    void updateCustomer() throws SQLException {
+        CustomerDataAccess.saveCustomer(new Customer("ABC", "Kasun", "Galle"));
+        assertDoesNotThrow(()-> CustomerDataAccess
+                .updateCustomer(new Customer("ABC", "Ruwan", "Matara")));
+    }
+
+    @Test
+    void deleteCustomer() throws SQLException {
+        CustomerDataAccess.saveCustomer(new Customer("ABC", "Kasun", "Galle"));
         int size = CustomerDataAccess.getAllCustomers().size();
-        assertDoesNotThrow(()->{
-            CustomerDataAccess.deleteCustomer(customer.getId());
-            assertTrue(CustomerDataAccess.getAllCustomers().size()==size-1);
-
-        });
-
-    }
-
-    @Test
-    void updateCustomer() {
-        Customer customer = new Customer("123","Udara","galle");
-        CustomerDataAccess.saveCustomer(customer);
-        assertDoesNotThrow(()->{
-            customer.setName("Uma");
-            customer.setAddress("Badulla");
-            CustomerDataAccess.updateCustomer(customer);
-
+        assertDoesNotThrow(()-> {
+            CustomerDataAccess.deleteCustomer("ABC");
+            assertEquals(size - 1, CustomerDataAccess.getAllCustomers().size());
         });
     }
 
     @Test
-    void getAllCustomers() {
-        Customer customer = new Customer("123","Udara","galle");
-        Customer customer1 = new Customer("122","Udari","galle");
-        Customer customer2 = new Customer("124","Udari","galle");
-        CustomerDataAccess.saveCustomer(customer);
-        CustomerDataAccess.saveCustomer(customer1);
-        CustomerDataAccess.saveCustomer(customer2);
-        assertDoesNotThrow(()->{
-            ArrayList<Customer> allCustomers = CustomerDataAccess.getAllCustomers();
-            assertTrue(allCustomers.size()>=3);
-
-        });
+    void getLastCustomerId() throws SQLException {
+        String lastCustomerId = CustomerDataAccess.getLastCustomerId();
+        if (CustomerDataAccess.getAllCustomers().isEmpty()){
+            assertNull(lastCustomerId);
+        }else{
+            CustomerDataAccess.saveCustomer(new Customer("ABC", "Kasun", "Galle"));
+            lastCustomerId = CustomerDataAccess.getLastCustomerId();
+            assertNotNull(lastCustomerId);
+        }
     }
 }
