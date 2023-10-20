@@ -131,11 +131,7 @@ public class ManageCustomerFormController {
 
     public void btnDelete_OnAction(ActionEvent actionEvent) {
         try {
-//            if (OrderDataAccess.existsOrderByCustomerId(txtCustomerId.getText())){
-//                new Alert(Alert.AlertType.ERROR,
-//                        "Unable to delete this customer, already associated with an order").show();
-//            }else
-
+                //todo ? what there is an order for the selected customer
             {
                 CustomerDataAccess.deleteCustomer(txtCustomerId.getText());
                 ObservableList<Customer> customerList = tblCustomers.getItems();
