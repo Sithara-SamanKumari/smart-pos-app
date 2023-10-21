@@ -16,6 +16,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lk.ijse.dep11.pos.db.CustomerDataAccess;
 import lk.ijse.dep11.pos.db.ItemDataAccess;
+import lk.ijse.dep11.pos.db.OrderDataAccess;
 import lk.ijse.dep11.pos.tm.Customer;
 import lk.ijse.dep11.pos.tm.Item;
 import lk.ijse.dep11.pos.tm.OrderItem;
@@ -58,6 +59,7 @@ public class PlaceOrderFormController {
         newOrder();
         try {
             cmbCustomerId.getSelectionModel().selectedItemProperty().addListener((ov,prev,cur)->{
+                enablePlaceOrderButton();
                 if(cur==null){
                     txtCustomerName.setDisable(true);
                     txtCustomerName.clear();
@@ -119,6 +121,13 @@ public class PlaceOrderFormController {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        try {
+            setOrderId();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        cmbCustomerId.requestFocus();
     }
 
     public void navigateToHome(MouseEvent mouseEvent) throws IOException {
@@ -143,6 +152,7 @@ public class PlaceOrderFormController {
                 tblOrderDetails.getItems().remove(orderItem);
                 selectedItem.setQty(selectedItem.getQty()+orderItem.getQty());
                 addTotal();
+                enablePlaceOrderButton();
             });
         }
         else {
@@ -159,10 +169,24 @@ public class PlaceOrderFormController {
         Optional<BigDecimal> total = tblOrderDetails.getItems().stream().map(orderItem -> orderItem.getTotal()).reduce((prev, cur) -> prev.add(cur));
         lblTotal.setText("Total: Rs. "+ total.get().toString());
     }
+    private String setOrderId() throws SQLException {
+        if(OrderDataAccess.getLastOrderId()==null){
+            return "OD001";
+        }else{
+            int id = Integer.parseInt(OrderDataAccess.getLastOrderId().substring(2))+1;
+            return String.format("OD%03d",id);
+        }
+    }
+
+    private  void enablePlaceOrderButton(){
+        Customer selectedCustomer = cmbCustomerId.getSelectionModel().getSelectedItem();
+        btnPlaceOrder.setDisable(!((selectedCustomer!=null)&& !tblOrderDetails.getItems().isEmpty()));
+    }
 
     public void txtQty_OnAction(ActionEvent actionEvent) {
     }
 
     public void btnPlaceOrder_OnAction(ActionEvent actionEvent) {
     }
+
 }
