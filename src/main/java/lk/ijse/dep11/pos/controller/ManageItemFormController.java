@@ -94,7 +94,10 @@ public class ManageItemFormController {
 
        Item item= new Item( code,description,qty,unitPrice);
        try {
-            if (btnSave.getText().equals("Save")){
+           if(ItemDataAccess.existsItem(item.getCode())){
+               new Alert(Alert.AlertType.ERROR,"Item already exists.").show();
+           }
+            else if (btnSave.getText().equals("Save")){
                 ItemDataAccess.saveItem(item);
                 tblItems.getItems().add(item);
             }else{

@@ -17,11 +17,13 @@ public class ItemDataAccess {
     private static final PreparedStatement STM_UPDATE_ITEM;
     private static final PreparedStatement STM_DELETE_ITEM;
     private static final PreparedStatement STM_GET_ALL_ITEMS;
+    private static final PreparedStatement STM_ITEM_EXIST;
 
     static {
         try {
             Connection connection = SingleDatabaseConnection.getInstance().getConnection();
             STM_GET_ALL_ITEMS = connection.prepareStatement("SELECT * FROM item ORDER BY code");
+            STM_ITEM_EXIST = connection.prepareStatement("SELECT * FROM item WHERE code=?");
             STM_INSERT_ITEM = connection
                     .prepareStatement("INSERT INTO item (code, description, qty, unit_price) VALUES (?, ?, ?,?)");
             STM_UPDATE_ITEM = connection
@@ -65,5 +67,10 @@ public class ItemDataAccess {
         STM_DELETE_ITEM.setString(1, itemCode);
         STM_DELETE_ITEM.executeUpdate();
     }
+    public static boolean existsItem(String itemCode) throws SQLException {
+        STM_ITEM_EXIST.setString(1, itemCode);
+        return STM_ITEM_EXIST.executeQuery().next();
+    }
+
 
 }
