@@ -57,10 +57,15 @@ public class PlaceOrderFormController {
             txtCustomerName.setEditable(false);
             txtDescription.setEditable(false);
             txtQtyOnHand.setEditable(false);
-            txtQty.setEditable(false);
 
             cmbCustomerId.getSelectionModel().selectedItemProperty().addListener((ov,prev,cur)->{
-                if(cur!=null){
+                if(cur==null){
+                    txtCustomerName.setDisable(true);
+                    txtCustomerName.clear();
+                }
+                else{
+                    txtCustomerName.setEditable(false);
+                    txtCustomerName.setEditable(false);
                     txtCustomerName.setText(cur.getName());
                 }
             });
@@ -70,10 +75,24 @@ public class PlaceOrderFormController {
                     txtDescription.setText(cur.getDescription());
                     txtQtyOnHand.setText(String.valueOf(cur.getQty()));
                     txtUnitPrice.setText(String.valueOf(cur.getUnit_price()));
+                    for (JFXTextField txt: new JFXTextField[]{txtQtyOnHand,txtDescription,txtUnitPrice}) {
+                        txt.setDisable(false);
+                        txt.setEditable(false);
+                    }
 
+                }else{
+                    for (JFXTextField txt: new JFXTextField[]{txtQtyOnHand,txtDescription,txtUnitPrice}) {
+                        txt.setDisable(true);
+                        txt.clear();
+                    }
                 }
             });
 
+            txtQty.textProperty().addListener((ov, prevQty, curQty) -> {
+                Item selectedItem = cmbItemCode.getSelectionModel().getSelectedItem();
+                btnSave.setDisable(!(curQty.matches("\\d+") && Integer.parseInt(curQty) <= selectedItem.getQty()
+                        && Integer.parseInt(curQty) > 0));
+            });
 
 
 
@@ -82,13 +101,13 @@ public class PlaceOrderFormController {
         }
     }
 
-    private void newOrder(){
-        for (JFXTextField txt: new JFXTextField[]{txtCustomerName,txtQty,txtDescription,txtQtyOnHand,txtUnitPrice}) {
-            txt.clear();
-            txt.setDisable(true);
-        }
-
-    }
+//    private void newOrder(){
+//        for (JFXTextField txt: new JFXTextField[]{txtCustomerName,txtQty,txtDescription,txtQtyOnHand,txtUnitPrice}) {
+//            txt.clear();
+//            txt.setDisable(true);
+//        }
+//
+//    }
 
     public void navigateToHome(MouseEvent mouseEvent) throws IOException {
         URL resource = this.getClass().getResource("/view/MainForm.fxml");

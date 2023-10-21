@@ -131,7 +131,7 @@ public class ManageCustomerFormController {
 
     public void btnDelete_OnAction(ActionEvent actionEvent) {
         try {
-                //todo ? what there is an order for the selected customer
+                //todo ? what if there is an order for the selected customer
             {
                 CustomerDataAccess.deleteCustomer(txtCustomerId.getText());
                 ObservableList<Customer> customerList = tblCustomers.getItems();
