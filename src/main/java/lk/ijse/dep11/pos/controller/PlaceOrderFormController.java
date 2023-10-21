@@ -10,6 +10,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -44,20 +45,16 @@ public class PlaceOrderFormController {
     public JFXButton btnPlaceOrder;
 
     public void initialize(){
+         String[] cols = {"code", "description", "qty", "unitPrice", "total", "btnDelete"};
+        for (int i = 0; i < cols.length; i++) {
+            tblOrderDetails.getColumns().get(i).setCellValueFactory(new PropertyValueFactory<>(cols[i]));
+        }
         btnPlaceOrder.setDisable(true);
         btnSave.setDisable(true);
         lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
+        newOrder();
         try {
-            cmbCustomerId.getItems().clear();
-            cmbCustomerId.getItems().addAll(CustomerDataAccess.getAllCustomers());
-            cmbItemCode.getItems().clear();
-            cmbItemCode.getItems().addAll(ItemDataAccess.getAllItems());
-
-            txtCustomerName.setEditable(false);
-            txtDescription.setEditable(false);
-            txtQtyOnHand.setEditable(false);
-
             cmbCustomerId.getSelectionModel().selectedItemProperty().addListener((ov,prev,cur)->{
                 if(cur==null){
                     txtCustomerName.setDisable(true);
@@ -65,7 +62,7 @@ public class PlaceOrderFormController {
                 }
                 else{
                     txtCustomerName.setEditable(false);
-                    txtCustomerName.setEditable(false);
+                    txtCustomerName.setDisable(false);
                     txtCustomerName.setText(cur.getName());
                 }
             });
@@ -79,9 +76,11 @@ public class PlaceOrderFormController {
                         txt.setDisable(false);
                         txt.setEditable(false);
                     }
+                    txtQty.setEditable(true);
+                    txtQty.setDisable(false);
 
                 }else{
-                    for (JFXTextField txt: new JFXTextField[]{txtQtyOnHand,txtDescription,txtUnitPrice}) {
+                    for (JFXTextField txt: new JFXTextField[]{txtQtyOnHand,txtDescription,txtUnitPrice,txtQty}) {
                         txt.setDisable(true);
                         txt.clear();
                     }
@@ -93,21 +92,30 @@ public class PlaceOrderFormController {
                 btnSave.setDisable(!(curQty.matches("\\d+") && Integer.parseInt(curQty) <= selectedItem.getQty()
                         && Integer.parseInt(curQty) > 0));
             });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private void newOrder(){
+        for (JFXTextField txt: new JFXTextField[]{txtCustomerName,txtQty,txtDescription,txtQtyOnHand,txtUnitPrice}) {
+            txt.clear();
+            txt.setDisable(true);
+            txt.setEditable(false);
+        }
+        tblOrderDetails.getItems().clear();
+        cmbItemCode.getSelectionModel().clearSelection();
+        cmbCustomerId.getSelectionModel().clearSelection();
+        lblTotal.setText("Total : Rs. 0.00");
 
-
-
+        try {
+            cmbCustomerId.getItems().clear();
+            cmbItemCode.getItems().clear();
+            cmbItemCode.getItems().addAll(ItemDataAccess.getAllItems());
+            cmbCustomerId.getItems().addAll(CustomerDataAccess.getAllCustomers());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
-//    private void newOrder(){
-//        for (JFXTextField txt: new JFXTextField[]{txtCustomerName,txtQty,txtDescription,txtQtyOnHand,txtUnitPrice}) {
-//            txt.clear();
-//            txt.setDisable(true);
-//        }
-//
-//    }
 
     public void navigateToHome(MouseEvent mouseEvent) throws IOException {
         URL resource = this.getClass().getResource("/view/MainForm.fxml");
