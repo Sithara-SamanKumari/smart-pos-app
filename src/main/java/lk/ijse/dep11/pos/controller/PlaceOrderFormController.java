@@ -142,6 +142,7 @@ public class PlaceOrderFormController {
             delete.setOnAction(e->{
                 tblOrderDetails.getItems().remove(orderItem);
                 selectedItem.setQty(selectedItem.getQty()+orderItem.getQty());
+                addTotal();
             });
         }
         else {
@@ -151,9 +152,12 @@ public class PlaceOrderFormController {
         }
         cmbItemCode.getSelectionModel().clearSelection();
         cmbItemCode.requestFocus();
+        addTotal();
 
-
-
+    }
+    private void addTotal(){
+        Optional<BigDecimal> total = tblOrderDetails.getItems().stream().map(orderItem -> orderItem.getTotal()).reduce((prev, cur) -> prev.add(cur));
+        lblTotal.setText("Total: Rs. "+ total.get().toString());
     }
 
     public void txtQty_OnAction(ActionEvent actionEvent) {
