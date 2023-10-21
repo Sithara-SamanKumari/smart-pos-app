@@ -4,10 +4,12 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -25,6 +27,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -163,30 +166,43 @@ public class PlaceOrderFormController {
         cmbItemCode.getSelectionModel().clearSelection();
         cmbItemCode.requestFocus();
         addTotal();
+        enablePlaceOrderButton();
 
     }
     private void addTotal(){
         Optional<BigDecimal> total = tblOrderDetails.getItems().stream().map(orderItem -> orderItem.getTotal()).reduce((prev, cur) -> prev.add(cur));
-        lblTotal.setText("Total: Rs. "+ total.get().toString());
+        lblTotal.setText("Total: Rs. "+ total.orElseGet(()->BigDecimal.ZERO).setScale(2));
     }
-    private String setOrderId() throws SQLException {
+    private void setOrderId() throws SQLException {
         if(OrderDataAccess.getLastOrderId()==null){
-            return "OD001";
+            lblId.setText("Order ID: OD001");
         }else{
             int id = Integer.parseInt(OrderDataAccess.getLastOrderId().substring(2))+1;
-            return String.format("OD%03d",id);
+            lblId.setText(String.format("Order ID: OD%03d",id));
         }
     }
 
-    private  void enablePlaceOrderButton(){
+    private void enablePlaceOrderButton(){
         Customer selectedCustomer = cmbCustomerId.getSelectionModel().getSelectedItem();
-        btnPlaceOrder.setDisable(!((selectedCustomer!=null)&& !tblOrderDetails.getItems().isEmpty()));
+        btnPlaceOrder.setDisable(!(selectedCustomer != null && !tblOrderDetails.getItems().isEmpty()));
     }
 
     public void txtQty_OnAction(ActionEvent actionEvent) {
     }
 
-    public void btnPlaceOrder_OnAction(ActionEvent actionEvent) {
+    public void btnPlaceOrder_OnAction(ActionEvent actionEvent)  {
+        ObservableList<OrderItem> items = tblOrderDetails.getItems();
+        try {
+            OrderDataAccess.saveOrder(
+                    items,
+                   lblId.getText().replace("Order ID:","").strip(),
+                    Date.valueOf(lblDate.getText()),
+                    cmbCustomerId.getValue().getId());
+            newOrder();
+        } catch (SQLException e) {
+            new Alert(Alert.AlertType.ERROR,"Failed to save the order,try again");
+
+        }
     }
 
 }

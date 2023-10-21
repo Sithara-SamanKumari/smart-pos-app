@@ -1,18 +1,22 @@
 package lk.ijse.dep11.pos.db;
 
 import lk.ijse.dep11.pos.tm.OrderItem;
+import lombok.Data;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.List;
 
 public class OrderDataAccess {
     private static final PreparedStatement STM_EXISTS_BY_CUSTOMER_ID;
     private static final PreparedStatement STM_EXISTS_BY_ITEM_CODE;
     private static final PreparedStatement STM_GET_LAST_ORDER_ID;
 
-//    private static final PreparedStatement STM_INSERT_ORDER_ITEM;
+    private static final PreparedStatement STM_INSERT_ORDER_ITEM;
+    private static final PreparedStatement STM_INSERT_ORDER;
+
+    private static final PreparedStatement STM_UPDATE_ITEM_TABLE;
+
+
 
     static {
         Connection connection = SingleDatabaseConnection.getInstance().getConnection();
@@ -20,7 +24,9 @@ public class OrderDataAccess {
             STM_EXISTS_BY_CUSTOMER_ID = connection.prepareStatement("SELECT * FROM \"order\" WHERE customer_id=?");
             STM_EXISTS_BY_ITEM_CODE = connection.prepareStatement("SELECT * FROM order_item WHERE item_code=?");
             STM_GET_LAST_ORDER_ID = connection.prepareStatement("SELECT id FROM \"order\" ORDER BY id DESC FETCH FIRST ROWS ONLY ");
-//            STM_INSERT_ORDER_ITEM = connection.prepareStatement("INSERT INTO order_item(order_id, item_code, qty, unit_price) VALUES (?,?,?,?)");
+            STM_INSERT_ORDER_ITEM = connection.prepareStatement("INSERT INTO order_item(order_id, item_code, qty, unit_price) VALUES (?,?,?,?)");
+            STM_INSERT_ORDER = connection.prepareStatement("INSERT INTO \"order\"(id,date,customer_id) VALUES (?,?,?)");
+            STM_UPDATE_ITEM_TABLE = connection.prepareStatement("UPDATE item SET qty=? WHERE code=?");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -43,11 +49,37 @@ public class OrderDataAccess {
         }
         return null;
     }
-//    public static void saveOrder(OrderItem oi,String orderId) throws SQLException {
-//        STM_INSERT_ORDER_ITEM.setString(1,orderId);
-//        STM_INSERT_ORDER_ITEM.setString(2,oi.getCode());
-//        STM_INSERT_ORDER_ITEM.setInt(3,oi.getQty());
-//        STM_INSERT_ORDER_ITEM.setBigDecimal(4,oi.getUnitPrice());
-//    }
+    public static void saveOrder(List<OrderItem> oi, String orderId, Date date, String customerId) throws SQLException {
+        SingleDatabaseConnection.getInstance().getConnection().setAutoCommit(false);
+        try{
+            /*Save order items */
+            STM_INSERT_ORDER.setString(1, orderId);
+            STM_INSERT_ORDER.setDate(2, date);
+            STM_INSERT_ORDER.setString(3, customerId);
+            STM_INSERT_ORDER.executeUpdate();
+
+            /* 2. Save Order Item List */
+            /* 3. Update the Stock of each Order Item */
+            for (OrderItem orderItem : oi) {
+                STM_INSERT_ORDER_ITEM.setString(1, orderId);
+                STM_INSERT_ORDER_ITEM.setString(2, orderItem.getCode());
+                STM_INSERT_ORDER_ITEM.setInt(3, orderItem.getQty());
+                STM_INSERT_ORDER_ITEM.setBigDecimal(4, orderItem.getUnitPrice());
+                STM_INSERT_ORDER_ITEM.executeUpdate();
+
+                STM_UPDATE_ITEM_TABLE.setInt(1, orderItem.getQty());
+                STM_UPDATE_ITEM_TABLE.setString(2, orderItem.getCode());
+                STM_UPDATE_ITEM_TABLE.executeUpdate();
+            }
+
+            SingleDatabaseConnection.getInstance().getConnection().commit();
+        }catch (Exception e){
+            SingleDatabaseConnection.getInstance().getConnection().rollback();
+            e.printStackTrace();
+        }finally {
+            SingleDatabaseConnection.getInstance().getConnection().setAutoCommit(true);
+        }
+
+    }
 
 }
