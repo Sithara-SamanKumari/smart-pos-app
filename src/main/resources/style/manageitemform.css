@@ -24,6 +24,7 @@
     -fx-background-color: #ffc107;
 }
 
+
 .table-row-cell:selected{
     -fx-background-color:linear-gradient(from 0% 0% to 100% 100%, white 0%, #007bff 50%, white 100%);
 }
