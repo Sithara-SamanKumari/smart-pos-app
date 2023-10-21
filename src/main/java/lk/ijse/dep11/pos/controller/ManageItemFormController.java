@@ -17,6 +17,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lk.ijse.dep11.pos.db.CustomerDataAccess;
 import lk.ijse.dep11.pos.db.ItemDataAccess;
+import lk.ijse.dep11.pos.db.OrderDataAccess;
 import lk.ijse.dep11.pos.tm.Customer;
 import lk.ijse.dep11.pos.tm.Item;
 
@@ -60,7 +61,7 @@ public class ManageItemFormController {
                 txtQtyOnHand.setText(String.valueOf(cur.getQty()));
                 txtUnitPrice.setText(cur.getUnit_price().toString());
             }else{
-                btnSave.setText("SAVE");
+                btnSave.setText("Save");
                 btnDelete.setDisable(true);
             }
         });
@@ -98,7 +99,7 @@ public class ManageItemFormController {
                 tblItems.getItems().add(item);
             }else{
                 ItemDataAccess.updateItem(item);
-                ObservableList<Item > itemList = tblItems.getItems();
+                ObservableList<Item> itemList = tblItems.getItems();
                 Item selectedItem = tblItems.getSelectionModel().getSelectedItem();
                 itemList.set(itemList.indexOf(selectedItem),item);
                 tblItems.refresh();
@@ -137,15 +138,17 @@ public class ManageItemFormController {
 
     public void btnDelete_OnAction(ActionEvent actionEvent) {
         Item selectedItem = tblItems.getSelectionModel().getSelectedItem();
-        //todo: id there is an order with the relevant item
-        {
-            try {
+        try {
+            if(OrderDataAccess.existOrderByItemCode(selectedItem.getCode())){
+                new Alert(Alert.AlertType.ERROR,
+                        "Unable to delete this customer, already associated with an order").show();
+            }else{
                 ItemDataAccess.deleteItem(selectedItem.getCode());
                 tblItems.getItems().remove(selectedItem);
                 if (tblItems.getItems().isEmpty()) btnNewItem.fire();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }
