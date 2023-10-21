@@ -22,11 +22,13 @@ import lk.ijse.dep11.pos.tm.OrderItem;
 
 import java.awt.*;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 public class PlaceOrderFormController {
     public AnchorPane root;
@@ -91,7 +93,9 @@ public class PlaceOrderFormController {
                 Item selectedItem = cmbItemCode.getSelectionModel().getSelectedItem();
                 btnSave.setDisable(!(curQty.matches("\\d+") && Integer.parseInt(curQty) <= selectedItem.getQty()
                         && Integer.parseInt(curQty) > 0));
+
             });
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -118,16 +122,38 @@ public class PlaceOrderFormController {
     }
 
     public void navigateToHome(MouseEvent mouseEvent) throws IOException {
-        URL resource = this.getClass().getResource("/view/MainForm.fxml");
-        Parent root = FXMLLoader.load(resource);
-        Scene scene = new Scene(root);
-        Stage primaryStage = (Stage) (this.root.getScene().getWindow());
-        primaryStage.setScene(scene);
-        primaryStage.centerOnScreen();
-        Platform.runLater(primaryStage::sizeToScene);
+        MainFormController.navigateToMain(root);
     }
 
     public void btnAdd_OnAction(ActionEvent actionEvent) {
+        Customer selectedCustomer = cmbCustomerId.getSelectionModel().getSelectedItem();
+        Item selectedItem = cmbItemCode.getSelectionModel().getSelectedItem();
+
+        Optional<OrderItem> orderItem1 = tblOrderDetails.getItems().stream().filter(e -> selectedItem.getCode().equals(e.getCode())).findFirst();
+        if(orderItem1.isEmpty()){
+            JFXButton delete = new JFXButton("Delete");
+            OrderItem orderItem = new OrderItem(selectedItem.getCode(),
+                    selectedItem.getDescription(),
+                    Integer.parseInt(txtQty.getText()),
+                    selectedItem.getUnit_price(), delete);
+            tblOrderDetails.getItems().add(orderItem);
+            selectedItem.setQty(selectedItem.getQty()-orderItem.getQty());
+
+            delete.setOnAction(e->{
+                tblOrderDetails.getItems().remove(orderItem);
+                selectedItem.setQty(selectedItem.getQty()+orderItem.getQty());
+            });
+        }
+        else {
+            orderItem1.get().setQty(selectedItem.getQty()+orderItem1.get().getQty());
+            tblOrderDetails.refresh();
+            selectedItem.setQty(selectedItem.getQty()-Integer.parseInt(txtQty.getText()));
+        }
+        cmbItemCode.getSelectionModel().clearSelection();
+        cmbItemCode.requestFocus();
+
+
+
     }
 
     public void txtQty_OnAction(ActionEvent actionEvent) {

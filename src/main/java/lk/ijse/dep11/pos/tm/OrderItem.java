@@ -18,7 +18,7 @@ public class OrderItem  implements Serializable {
     private BigDecimal unitPrice;
     private JFXButton btnDelete;
 
-    private BigDecimal getTotal(){
+    public BigDecimal getTotal(){
         return (unitPrice.multiply(new BigDecimal(qty)));
     }
 }
