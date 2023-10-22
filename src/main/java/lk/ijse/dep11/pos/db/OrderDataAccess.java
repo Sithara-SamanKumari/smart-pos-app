@@ -1,9 +1,12 @@
 package lk.ijse.dep11.pos.db;
 
+import lk.ijse.dep11.pos.tm.Order;
 import lk.ijse.dep11.pos.tm.OrderItem;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDataAccess {
@@ -16,7 +19,7 @@ public class OrderDataAccess {
 
     private static final PreparedStatement STM_UPDATE_ITEM_TABLE;
 
-
+    private static final PreparedStatement STM_FIND_ORDER;
 
     static {
         Connection connection = SingleDatabaseConnection.getInstance().getConnection();
@@ -27,6 +30,20 @@ public class OrderDataAccess {
             STM_INSERT_ORDER_ITEM = connection.prepareStatement("INSERT INTO order_item(order_id, item_code, qty, unit_price) VALUES (?,?,?,?)");
             STM_INSERT_ORDER = connection.prepareStatement("INSERT INTO \"order\"(id,date,customer_id) VALUES (?,?,?)");
             STM_UPDATE_ITEM_TABLE = connection.prepareStatement("UPDATE item SET qty=? WHERE code=?");
+            STM_FIND_ORDER  = connection.prepareStatement("SELECT o.*, c.name, CAST(\"order_total\".total AS DECIMAL(8, 2))\n" +
+                    "FROM \"order\" AS o\n" +
+                    "         INNER JOIN customer AS c ON c.id = o.\"customer_id\"\n" +
+                    "         INNER JOIN customer c2 on c2.id = o.customer_id\n" +
+                    "         INNER JOIN\n" +
+                    "     (SELECT oi.order_id, SUM(oi.qty * \"oi\".\"unit_price\") AS total\n" +
+                    "      FROM order_item AS oi\n" +
+                    "               INNER JOIN \"order\" AS i ON oi.order_id = i.id\n" +
+                    "      GROUP BY oi.order_id) AS order_total ON order_total.order_id = o.id\n" +
+                    "WHERE o.id LIKE ?\n" +
+                    "   OR CAST(o.date AS VARCHAR(20)) LIKE ?\n" +
+                    "   OR o.customer_id LIKE ?\n" +
+                    "   OR c.name LIKE ?\n" +
+                    "ORDER BY id");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -80,6 +97,24 @@ public class OrderDataAccess {
             SingleDatabaseConnection.getInstance().getConnection().setAutoCommit(true);
         }
 
+    }
+
+    public static  ArrayList<Order> findOrder(String keyWord) throws SQLException {
+        ArrayList<Order> orderList = new ArrayList<>();
+        for (int i = 1; i < 5; i++) {
+            STM_FIND_ORDER.setString(i, "%"+keyWord+"%");
+        }
+            ResultSet rst = STM_FIND_ORDER.executeQuery();
+            while (rst.next()){
+                String orderId = rst.getString("id");
+                Date orderDate = rst.getDate("date");
+                String customerId = rst.getString("customer_id");
+                String customerName = rst.getString("name");
+                BigDecimal orderTotal = rst.getBigDecimal("total");
+                orderList.add(new Order(orderId,orderDate,customerId,customerName,orderTotal));
+            }
+
+        return orderList;
     }
 
 }
